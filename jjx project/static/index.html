@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Management Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js" defer></script>
+    <script src="/js/app.js" defer></script>
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <div>
+          <h1>Projects</h1>
+          <p class="subtitle">Track bureaus, timelines, and budgets in one place.</p>
+        </div>
+        <button type="button" class="btn primary" id="btn-new-project">New project</button>
+      </header>
+
+      <section class="stats" id="stats-root" aria-live="polite"></section>
+
+      <section class="panel charts-panel">
+        <div class="panel-head">
+          <h2>Visualizations</h2>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3>By status</h3>
+            <canvas id="chart-status" height="220"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>By bureau</h3>
+            <canvas id="chart-bureau" height="260"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>By priority</h3>
+            <canvas id="chart-priority" height="220"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel timeline-panel">
+        <div class="panel-head">
+          <h2>Timeline</h2>
+          <p class="muted">Start → end (or ongoing if no end date)</p>
+        </div>
+        <div class="timeline" id="timeline-root"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Directory</h2>
+        </div>
+        <div class="filters">
+          <label class="field grow">
+            <span>Search</span>
+            <input type="search" id="filter-search" placeholder="Name, bureau, description…" autocomplete="off" />
+          </label>
+          <label class="field">
+            <span>Status</span>
+            <select id="filter-status"></select>
+          </label>
+          <label class="field">
+            <span>Bureau</span>
+            <select id="filter-bureau"></select>
+          </label>
+          <label class="field">
+            <span>Priority</span>
+            <select id="filter-priority"></select>
+          </label>
+          <label class="field">
+            <span>Sort by</span>
+            <select id="sort-field">
+              <option value="start_date">Start date</option>
+              <option value="end_date">End date</option>
+              <option value="project_name">Name</option>
+              <option value="bureau">Bureau</option>
+              <option value="status">Status</option>
+              <option value="priority">Priority</option>
+              <option value="budget">Budget</option>
+              <option value="id">ID</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Order</span>
+            <select id="sort-order">
+              <option value="desc">Descending</option>
+              <option value="asc">Ascending</option>
+            </select>
+          </label>
+          <button type="button" class="btn ghost" id="btn-reset-filters">Reset filters</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Bureau</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Budget</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="projects-tbody"></tbody>
+          </table>
+        </div>
+        <p class="empty hidden" id="projects-empty">No projects match your filters.</p>
+      </section>
+    </div>
+
+    <div class="modal-backdrop hidden" id="modal-backdrop" role="presentation"></div>
+    <div class="modal hidden" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-inner">
+        <div class="modal-head">
+          <h2 id="modal-title">New project</h2>
+          <button type="button" class="icon-btn" id="modal-close" aria-label="Close">×</button>
+        </div>
+        <form id="project-form" novalidate>
+          <input type="hidden" id="field-id" />
+          <div class="form-grid">
+            <label class="field full">
+              <span>Project name <span class="req">*</span></span>
+              <input name="project_name" id="field-project_name" maxlength="500" required />
+              <small class="error hidden" data-err-for="project_name"></small>
+            </label>
+            <label class="field">
+              <span>Bureau <span class="req">*</span></span>
+              <input name="bureau" id="field-bureau" list="dl-bureau" maxlength="200" required />
+              <datalist id="dl-bureau"></datalist>
+              <small class="error hidden" data-err-for="bureau"></small>
+            </label>
+            <label class="field">
+              <span>Status <span class="req">*</span></span>
+              <input name="status" id="field-status" list="dl-status" maxlength="100" required />
+              <datalist id="dl-status"></datalist>
+              <small class="error hidden" data-err-for="status"></small>
+            </label>
+            <label class="field">
+              <span>Priority <span class="req">*</span></span>
+              <input name="priority" id="field-priority" list="dl-priority" maxlength="50" required />
+              <datalist id="dl-priority"></datalist>
+              <small class="error hidden" data-err-for="priority"></small>
+            </label>
+            <label class="field">
+              <span>Start date <span class="req">*</span></span>
+              <input name="start_date" id="field-start_date" type="date" required />
+              <small class="error hidden" data-err-for="start_date"></small>
+            </label>
+            <label class="field">
+              <span>End date</span>
+              <input name="end_date" id="field-end_date" type="date" />
+              <small class="error hidden" data-err-for="end_date"></small>
+            </label>
+            <label class="field">
+              <span>Budget (optional)</span>
+              <input name="budget" id="field-budget" type="number" min="0" step="0.01" placeholder="e.g. 25000" />
+              <small class="error hidden" data-err-for="budget"></small>
+            </label>
+            <label class="field full">
+              <span>Description</span>
+              <textarea name="description" id="field-description" rows="4" maxlength="5000"></textarea>
+              <small class="error hidden" data-err-for="description"></small>
+            </label>
+          </div>
+          <p class="form-api-error hidden" id="form-api-error" role="alert"></p>
+          <div class="modal-actions">
+            <button type="button" class="btn ghost" id="btn-cancel">Cancel</button>
+            <button type="submit" class="btn primary" id="btn-save">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
